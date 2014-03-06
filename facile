@@ -1,5 +1,18 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
+use DBI;
+my $cfg = plugin 'Config';
+
+my $dbh;
+if ($cfg->{db_driver} eq 'pgsql') {
+
+}
+elsif ($cfg->{db_driver} eq 'sqlite') {
+}
+else {
+  die
+    "Invalid database driver selected. Did you forget to edit facile.conf?\n";
+}
 
 # Documentation browser under "/perldoc"
 plugin 'PODRenderer';
