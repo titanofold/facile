@@ -1,25 +1,65 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
-use DBI;
-my $cfg = plugin 'Config';
+use DBIx::Connector;
 
-my $dbh;
-if ($cfg->{db_driver} eq 'pgsql') {
+my $conn =
+  DBIx::Connector->new("dbi:Pg:$ENV{DATABASE_URL}", '', '',
+  {AutoCommit => 1, RaiseError => 1})
+  or die;
+$conn->mode('fixup');
 
-}
-elsif ($cfg->{db_driver} eq 'sqlite') {
-}
-else {
-  die
-    "Invalid database driver selected. Did you forget to edit facile.conf?\n";
-}
+####################
+# Database Helpers #
+####################
+helper 'db.list_tags' => sub {
+  my ($c) = @_;
+  $conn->run(
+    sub {
+      my $dbh = $_;
+      my $sth = $dbh->prepare_cached(q|SELECT tag FROM tags|);
+      $dbh->selectcol_arrayref($sth);
+    }
+  );
+};
 
-# Documentation browser under "/perldoc"
-plugin 'PODRenderer';
+helper 'db.list_articles' => sub {
+  my ($c) = @_;
+  $conn->run(
+    sub {
+      my $dbh = $_;
+      my $sth = $dbh->prepare_cached(q|SELECT title FROM articles|);
+      $dbh->selectcol_arrayref($sth);
+    }
+  );
+};
 
+##########
+# Routes #
+##########
 get '/' => sub {
-  my $self = shift;
-  $self->render('index');
+  my $c = shift;
+  $c->render('index');
+};
+
+get '/:topdir/#name' => [topdir => [qw(article tag)]] => sub {
+  my $c      = shift;
+  my $name   = $c->param('name');
+  my $topdir = $c->param('topdir');
+
+  $topdir =~ s|\.{2,}|-|g;
+  $name =~ s|\.{2,}|-|g;
+  $topdir =~ s|^\.+||;
+  $name =~ s|^\.+||;
+
+  if ($topdir eq 'article' && $c->db->article_exists($name)) {
+    $c->render('article');
+  }
+  elsif ($topdir eq 'tag' && $c->db->tag_exists($name)) {
+    $c->render('tag');
+  }
+  else {
+    $c->render('does_not_exist');
+  }
 };
 
 app->start;
@@ -28,7 +68,9 @@ __DATA__
 @@ index.html.ep
 % layout 'default';
 % title 'Welcome';
-Welcome to the Mojolicious real-time web framework!
+% for ($c->db->list_articles) {
+Do some magic
+% }
 
 @@ layouts/default.html.ep
 <!DOCTYPE html>
@@ -36,3 +78,12 @@ Welcome to the Mojolicious real-time web framework!
   <head><title><%= title %></title></head>
   <body><%= content %></body>
 </html>
+
+@@ tag.atom.ep
+
+@@ tag.html.ep
+% layout 'default';
+% title 'Tag: ' . $name;
+%= $c->db->list_articles_with_tag($name)
+
+@@ article.html.ep

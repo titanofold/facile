@@ -3,8 +3,9 @@
 BEGIN;
 
 CREATE TABLE authors (
-  name        TEXT                   PRIMARY KEY,
-  email       CHARACTER VARYING(254) NULL,
+  id          SERIAL                 PRIMARY KEY,
+  name        TEXT                   NOT NULL,
+  email       CHARACTER VARYING(254) UNIQUE NOT NULL,
   profile_url TEXT 		     NULL
 );
 
