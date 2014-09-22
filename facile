@@ -46,9 +46,7 @@ get '/:topdir/#name' => [topdir => [qw(article tag)]] => sub {
   my $name   = $c->param('name');
   my $topdir = $c->param('topdir');
 
-  $topdir =~ s|\.{2,}|-|g;
   $name =~ s|\.{2,}|-|g;
-  $topdir =~ s|^\.+||;
   $name =~ s|^\.+||;
 
   if ($topdir eq 'article' && $c->db->article_exists($name)) {
@@ -85,5 +83,3 @@ Do some magic
 % layout 'default';
 % title 'Tag: ' . $name;
 %= $c->db->list_articles_with_tag($name)
-
-@@ article.html.ep
