@@ -1,41 +1,31 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
-use DBIx::Connector;
+use Mojo::Pg;
 
-my $conn =
-  DBIx::Connector->new("dbi:Pg:$ENV{DATABASE_URL}", '', '',
-  {AutoCommit => 1, RaiseError => 1})
-  or die;
-$conn->mode('fixup');
+my $pg = Mojo::Pg->new($ENV{DATABASE_URL}) or app->log->fatal($!);
 
 ####################
 # Database Helpers #
 ####################
-helper 'db.list_tags' => sub {
-  my ($c) = @_;
-  $conn->run(
-    sub {
-      my $dbh = $_;
-      my $sth = $dbh->prepare_cached(q|SELECT tag FROM tags|);
-      $dbh->selectcol_arrayref($sth);
-    }
-  );
-};
+helper 'db.list_tags' => sub { $pg->db->query(q|SELECT tag FROM tags|) };
 
 helper 'db.list_articles' => sub {
-  my ($c) = @_;
-  $conn->run(
-    sub {
-      my $dbh = $_;
-      my $sth = $dbh->prepare_cached(q|SELECT title FROM articles|);
-      $dbh->selectcol_arrayref($sth);
-    }
-  );
+  $pg->db->query(q|SELECT title FROM articles|);
+};
+
+helper 'db.article_exists' => sub {
+  my ($c, $name) = @_;
+  $pg->db->query('SELECT COUNT(*) FROM articles WHERE file_name = ?', $name);
+};
+
+helper 'db.has_admin' => sub {
+  $pg->db->query('SELECT COUNT(*) FROM authors WHERE admin = TRUE');
 };
 
 ##########
 # Routes #
 ##########
+
 get '/' => sub {
   my $c = shift;
   $c->render('index');
@@ -57,6 +47,21 @@ get '/:topdir/#name' => [topdir => [qw(article tag)]] => sub {
   }
   else {
     $c->render('does_not_exist');
+  }
+};
+
+under '/admin';
+
+get '/add-post';
+
+get '/setup' => sub {
+  my $c = shift;
+  if ($pg->migrations->active and $c->db->has_admin) {
+    $c->render('admin/setup-done');
+  }
+  else {
+    $pg->migrations->from_file('migrations.sql')->migrate;
+    $c->render('admin/setup');
   }
 };
 

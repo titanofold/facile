@@ -1,0 +1,22 @@
+% layout 'default';
+% title $name;
+% my $article = $c->db->fetch_article_data_for($name);
+<article>
+  <header>
+    <h1><%= $name %></h1>
+    By <%= $article->{author} %>
+    Published <time pubdate><%= $article->{pubdate} %></time>
+    % if ($article->{moddate}) {
+      Updated <time><%= $article->{moddate} %>
+    % }
+  </header>
+  <aside>
+    <h2>Tags</h2>
+    <ul>
+      % for my $tag ($c->db->list_tags_for_article($name)) {
+	%= link_to $tag => "/tag/$tag" => (rel => 'tag')
+      % }
+    </ul>
+  </aside>
+  %= $article->{content}
+</article>

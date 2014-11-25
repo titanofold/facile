@@ -1,0 +1,8 @@
+% layout 'default';
+% title 'Add Post';
+
+%= form_for 'add-post' => begin
+%= text_field 'title'
+%= text_area 'content'
+%= text_field 'tag'
+% end

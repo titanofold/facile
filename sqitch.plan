@@ -1,7 +1,0 @@
-%syntax-version=1.0.0-b2
-%project=facile
-
-authors 2014-09-15T22:11:21Z Aaron W. Swenson <aaron.w.swenson@gmail.com># Add authors table
-tags 2014-09-15T22:18:08Z Aaron W. Swenson <aaron.w.swenson@gmail.com> # Create tags table
-articles [authors] 2014-09-17T22:00:31Z Aaron W. Swenson <aaron.w.swenson@gmail.com> # Add articles table
-article_tags [articles tags] 2014-09-17T22:06:27Z Aaron W. Swenson <aaron.w.swenson@gmail.com> # Add article_tags table

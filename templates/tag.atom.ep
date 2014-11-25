@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title>Example Feed</title>
+  %= link, rel => 'self', href => $c->url_for("/tag/$name")
+  <updated></updated>
+  %= tag id => $c->url_for('/')->to_abs
+
+  % for my $article ($c->db->list_articles_with_tag($name)) {
+    <entry>
+      %= tag title => $article->{title}
+      %= tag id => $c->url_for('/article/' . $article->{title})->to_abs)
+      %= tag author => begin
+      %= tag name => $article->{author}
+      % end
+      %= tag published => $article->{pubdate}
+      % if ($article->{moddate}) {
+	%= tag updated => $article->{moddate}
+      % }
+      %= tag summary => $article->{summary}
+    </entry>
+  % }
+
+</feed>
